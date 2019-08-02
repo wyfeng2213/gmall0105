@@ -9,7 +9,7 @@ import java.util.List;
  * @date : 2019/7/15 | 12:25
  **/
 public class PmsSearchParam implements Serializable {
-
+    private String id;
     private String catalog3Id;
     private String keyword;
     private String[] valueId;
