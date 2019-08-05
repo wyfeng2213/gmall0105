@@ -13,7 +13,7 @@ CREATE TABLE oms_cart_item (
   product_pic         VARCHAR(500),
   product_name        VARCHAR(255),
   product_sub_title   VARCHAR(30),
-  create_date         DATETIME(19) DEFAULT CURRENT_TIMESTAMP,
+  create_date         DATETIME,
   delete_status       INTEGER(1),
   product_category_id INTEGER(20),
   product_brand       VARCHAR(100),
@@ -54,7 +54,7 @@ CREATE TABLE oms_order (
   member_id               INTEGER(20),
   coupon_id               INTEGER(20),
   order_sn                VARCHAR(64),
-  create_time             DATETIME(19) DEFAULT CURRENT_TIMESTAMP,
+  create_time             DATETIME,
   member_username         VARCHAR(64),
   total_amount            VARCHAR(200),
   pay_amount              VARCHAR(200),
@@ -89,11 +89,11 @@ CREATE TABLE oms_order (
   confirm_status          INTEGER(1),
   delete_status           INTEGER(1),
   use_integration         VARCHAR(100),
-  payment_time            DATETIME(10),
-  delivery_time           DATETIME(10),
-  receive_time            DATETIME(10),
-  comment_time            DATETIME(10),
-  modify_time             DATETIME(10)
+  payment_time            DATETIME,
+  delivery_time           DATETIME,
+  receive_time            DATETIME,
+  comment_time            DATETIME,
+  modify_time             DATETIME
 );
 
 ALTER TABLE oms_order
@@ -133,10 +133,10 @@ CREATE TABLE payment_info (
   total_amount     VARCHAR(100),
   SUBJECT          VARCHAR(100),
   payment_status   VARCHAR(20),
-  create_time      DATETIME(19) DEFAULT CURRENT_TIMESTAMP,
-  confirm_time     DATETIME(10),
+  create_time      DATETIME,
+  confirm_time     DATETIME,
   callback_content VARCHAR(2000),
-  callback_time    DATETIME(10)
+  callback_time    DATETIME
 );
 
 ALTER TABLE payment_info
@@ -236,7 +236,7 @@ CREATE TABLE pms_comment (
   product_name      VARCHAR(100),
   star              VARCHAR(100),
   member_ip         VARCHAR(100),
-  create_time       DATETIME(19) DEFAULT CURRENT_TIMESTAMP,
+  create_time       DATETIME,
   show_status       VARCHAR(1),
   product_attribute VARCHAR(100),
   collect_count     INTEGER(20),
@@ -261,7 +261,7 @@ CREATE TABLE pms_comment_replay (
   member_nick_name VARCHAR(100),
   member_icon      VARCHAR(500),
   content          VARCHAR(255),
-  create_time      DATETIME(19) DEFAULT CURRENT_TIMESTAMP,
+  create_time      DATETIME,
   type             VARCHAR(255)
 );
 
@@ -325,7 +325,7 @@ CREATE TABLE pms_product_vertify_record (
   id          INTEGER(20) /*auto_increment*/
     NOT NULL,
   product_id  INTEGER(20),
-  create_time DATETIME(19) DEFAULT CURRENT_TIMESTAMP,
+  create_time DATETIME,
   vertify_man VARCHAR(100),
   STATUS      VARCHAR(1),
   detail      VARCHAR(100)
@@ -405,10 +405,10 @@ CREATE TABLE ums_member (
   nickname               VARCHAR(100),
   phone                  VARCHAR(100),
   STATUS                 INTEGER(1),
-  create_time            DATETIME(19) DEFAULT CURRENT_TIMESTAMP,
+  create_time            DATETIME,
   icon                   VARCHAR(500),
   gender                 INTEGER(1),
-  birthday               DATETIME(10),
+  birthday               DATETIME,
   city                   VARCHAR(100),
   job                    VARCHAR(100),
   personalized_signature VARCHAR(255),
@@ -439,7 +439,7 @@ CREATE TABLE ums_member_level (
   priviledge_comment      VARCHAR(255),
   priviledge_promotion    VARCHAR(255),
   priviledge_member_price NUMERIC(12, 2),
-  priviledge_birthday     DATETIME(10),
+  priviledge_birthday     DATETIME,
   note                    VARCHAR(255)
 );
 
