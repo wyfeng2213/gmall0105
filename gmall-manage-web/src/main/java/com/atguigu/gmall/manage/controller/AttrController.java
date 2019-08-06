@@ -34,7 +34,7 @@ public class AttrController {
     }
 
 
-    //attrValue
+    //attrValue 字典表数据
     @RequestMapping("GetattrValueList")
     @ResponseBody
     public List<PmsBaseAttrValue> GetattrValueList(String attrId){

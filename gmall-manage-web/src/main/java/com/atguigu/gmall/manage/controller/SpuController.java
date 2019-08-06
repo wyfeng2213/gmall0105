@@ -8,6 +8,7 @@ import com.atguigu.gmall.service.SpuService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
@@ -18,6 +19,13 @@ public class SpuController {
 
     @Reference
     SpuService spuService;
+
+    @RequestMapping(value = "saveSpuInfo",method = RequestMethod.POST)
+    @ResponseBody
+    public String saveSpuInfo(PmsProductInfo spuInfo){
+//        spuService.saveSpuInfo(spuInfo);
+        return  "success";
+    }
 
     @RequestMapping("spuList")
     @ResponseBody
@@ -39,5 +47,7 @@ public class SpuController {
         List<PmsProductSaleAttrValue> PmsProductSaleAttrValue = spuService.spuSaleAttrValue(pmsProductSaleAttr);
         return PmsProductSaleAttrValue;
     }
+
+
 
 }
