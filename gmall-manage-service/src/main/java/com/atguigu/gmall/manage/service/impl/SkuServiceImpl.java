@@ -112,7 +112,7 @@ public class SkuServiceImpl implements SkuService {
         PmsSkuInfo pmsSkuInfo = new PmsSkuInfo();
         /*1.连接缓存*/
         Jedis jedis = redisUtil.getJedis();
-        /*2.查询缓存*/
+        /*2.查询缓存  sku:    :info写到常量里面*/
         String skuKey = "sku:" + skuId + ":info";
         String skuJson = jedis.get(skuKey);
         /*StringUtils.isEmpty(skuJson)*/

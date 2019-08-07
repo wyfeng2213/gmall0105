@@ -10,6 +10,7 @@ import com.atguigu.gmall.manage.mapper.PmsProductSaleAttrValueMapper;
 import com.atguigu.gmall.service.SpuService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
