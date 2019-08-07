@@ -64,6 +64,7 @@ public class ItemController {
             String hashKey = "";
             String hashValue = skuInfo.getId();
             List<PmsSkuSaleAttrValue> pmsSkuSaleAttrValues = skuInfo.getPmsSkuSaleAttrValue();
+            // 拼接属性value |分割  拼接之后作为key  , skuInfo.getId 作为value
             for (PmsSkuSaleAttrValue pmsSkuSaleAttrValue : pmsSkuSaleAttrValues) {
                 hashKey += pmsSkuSaleAttrValue.getSaleAttrValueId() + "|";//5|7|9...
             }

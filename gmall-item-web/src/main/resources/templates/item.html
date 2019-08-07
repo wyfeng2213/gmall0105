@@ -38,17 +38,22 @@
 <script type="text/javascript">
 
     function btn() {
+        //$("#valueSku").val() 获取到的是返回的json字符串的值 需要通过val()获取一下 返回value 属性
+        // 获取到json字符串 ,然后再去获取值
         var skuSaleAttrValueJsonStr = $("#valueSku").val();
         alert(skuSaleAttrValueJsonStr)
         /*获取saleAttrValueId 的集合*/
         var saleAttrValueIds = $(".redborder div");
-        /*循环该集合*/
+        /*循环该集合 拼接key为 | */
+        //$(saleAttrValueId).attr("value") 获取值
         var hashKey = "";
         $(saleAttrValueIds).each(function (i, saleAttrValueId) {
             hashKey = hashKey + $(saleAttrValueId).attr("value") + "|";
         });
         alert(hashKey);
+        //转换json
         var skuSaleAttrValueJson = JSON.parse(skuSaleAttrValueJsonStr);
+        // 获取对应key 的值skuSaleAttrValueJson[hashKey]
         var v_skuId = skuSaleAttrValueJson[hashKey];
         alert(v_skuId)
         /*模拟skuId = 3*/
