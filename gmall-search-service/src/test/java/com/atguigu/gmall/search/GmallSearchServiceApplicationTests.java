@@ -11,6 +11,7 @@ import io.searchbox.core.SearchResult;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +44,14 @@ public class GmallSearchServiceApplicationTests {
         /*filter   , 在filter里面可以加term   , 相当于"pmsSkuAttrValue.valueId":"2" , 多个term可以new一个TermsQueryBuilder*/
         TermQueryBuilder termQueryBuilder = new TermQueryBuilder("pmsSkuAttrValue.valueId" , "2");
         boolQueryBuilder.filter(termQueryBuilder);
+        //多个term 交集,直接添加多个
+//        TermQueryBuilder termQueryBuilder1 = new TermQueryBuilder("pmsSkuAttrValue.valueId" , "2");
+//        boolQueryBuilder.filter(termQueryBuilder1);
+
+        //terms 并集
+//        TermsQueryBuilder termsQueryBuilder = new TermsQueryBuilder("pmsSkuAttrValue.valueId","1","2","3");
+//        boolQueryBuilder.filter(termsQueryBuilder);
+
         /*must   ,  在must里面可以加match  , 相当于"skuName": "P30Pro"*/
         MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("skuName" , "P30Pro");
         boolQueryBuilder.must(matchQueryBuilder);
@@ -61,7 +70,10 @@ public class GmallSearchServiceApplicationTests {
         /*用api执行复杂查询*/
         List<PmsSearchSkuInfo> pmsSearchSkuInfos = new ArrayList<>();
         Search search = new Search.Builder(dslStr).addIndex("gmall0105").addType("PmsSkuInfo").build();
+        //执行语句
         SearchResult execute = jestClient.execute(search);
+
+        // 取结果集
         List<SearchResult.Hit<PmsSearchSkuInfo, Void>> hits = execute.getHits(PmsSearchSkuInfo.class);
         for (SearchResult.Hit<PmsSearchSkuInfo, Void> hit : hits) {
             PmsSearchSkuInfo pmsSearchSkuInfo = hit.source;
@@ -84,6 +96,7 @@ public class GmallSearchServiceApplicationTests {
 
         /*导入es*/
         for (PmsSearchSkuInfo pmsSearchSkuInfo : pmsSearchSkuInfos) {
+            //pmsSearchSkuInfo数据最终会转换成json , index 库名 , type表名 , id 主键
             Index put = new Index.Builder(pmsSearchSkuInfo).index("gmall0105").type("PmsSkuInfo").id(pmsSearchSkuInfo.getId()).build();
             jestClient.execute(put);
         }
