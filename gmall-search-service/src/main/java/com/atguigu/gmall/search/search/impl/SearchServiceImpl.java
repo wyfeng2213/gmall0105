@@ -104,6 +104,7 @@ public class SearchServiceImpl implements SearchService {
         highlightBuilder.postTags("</span>");
         searchSourceBuilder.highlight(highlightBuilder);
         /*sort排序 , 按照id升序 ， 降序 ，这里存在String与long类型转换问题，待解决*/
+        // id排序 id在es的数据结构定义成long类型, 一般是按照热度排序
         searchSourceBuilder.sort("id" , SortOrder.DESC);
 
         /*最后转化成String返回给前台*/
