@@ -48,7 +48,7 @@ public class GmallSearchServiceApplicationTests {
 //        TermQueryBuilder termQueryBuilder1 = new TermQueryBuilder("pmsSkuAttrValue.valueId" , "2");
 //        boolQueryBuilder.filter(termQueryBuilder1);
 
-        //terms 并集
+        //terms 并集  也可以直接添加多个
 //        TermsQueryBuilder termsQueryBuilder = new TermsQueryBuilder("pmsSkuAttrValue.valueId","1","2","3");
 //        boolQueryBuilder.filter(termsQueryBuilder);
 
