@@ -40,7 +40,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void addCart(OmsCartItem omsCartItem) {
-        if (StringUtils.isNotBlank(omsCartItem.getMemberId())){
+        if (StringUtils.isNotBlank(omsCartItem.getMemberId())) {
             omsCartItemMapper.insert(omsCartItem);
         }
     }
@@ -48,8 +48,8 @@ public class CartServiceImpl implements CartService {
     @Override
     public void updataCart(OmsCartItem omsCartItemFromDb) {
         Example e = new Example(OmsCartItem.class);
-        e.createCriteria().andEqualTo("id" , omsCartItemFromDb.getId());
-        omsCartItemMapper.updateByExampleSelective(omsCartItemFromDb , e);
+        e.createCriteria().andEqualTo("id", omsCartItemFromDb.getId());
+        omsCartItemMapper.updateByExampleSelective(omsCartItemFromDb, e);
     }
 
     @Override
@@ -66,9 +66,10 @@ public class CartServiceImpl implements CartService {
         * */
         HashMap<String, String> map = new HashMap<>();
         for (OmsCartItem cartItem : omsCartItems) {
-            map.put(cartItem.getProductSkuId() , JSON.toJSONString(cartItem));
+            //刷新缓存的时候计算总价格
+            map.put(cartItem.getProductSkuId(), JSON.toJSONString(cartItem));
         }
-        jedis.hmset("user:"+memberId+":cart" , map);
+        jedis.hmset("user:" + memberId + ":cart", map);
         jedis.close();
     }
 
@@ -76,17 +77,18 @@ public class CartServiceImpl implements CartService {
     public List<OmsCartItem> cartList(String memberId) {
         Jedis jedis = null;
         List<OmsCartItem> omsCartItems = new ArrayList<>();
-        try{
+        try {
             jedis = redisUtil.getJedis();/*Hash()查询*/
             List<String> hvals = jedis.hvals("user:" + memberId + ":cart");
             for (String hval : hvals) {
                 OmsCartItem omsCartItem = JSON.parseObject(hval, OmsCartItem.class);
                 omsCartItems.add(omsCartItem);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
+            // 真正的异常需要放到数据库中去 e.getMessage();
             e.printStackTrace();
             return null;
-        }finally {
+        } finally {
             jedis.close();
         }
         return omsCartItems;
@@ -106,14 +108,40 @@ public class CartServiceImpl implements CartService {
         omsCartItemMapper.delete(omsCartItem);
 
         Jedis jedis = null;
-        try{
+        try {
             jedis = redisUtil.getJedis();
-            jedis.del("user:"+memberId+":cart");
-        }catch (Exception e){
+            jedis.del("user:" + memberId + ":cart");
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             jedis.close();
         }
+    }
+
+    @Override
+    public void checkCart(String skuId, String isChecked, String userId) {
+        // 1. 更新到数据库
+        // 2.更新缓存  flushCartCatch(userId)
+
+        //更新购物车中的isChecked标志  redis
+        Jedis jedis = redisUtil.getJedis();
+        String userCartKey ="user:" + userId + ":cart";
+        String cartJson = jedis.hget(userCartKey, skuId);
+
+        OmsCartItem cartInfo = JSON.parseObject(cartJson, OmsCartItem.class);
+        cartInfo.setIsChecked(isChecked);
+        String cartCheckedJson = JSON.toJSONString(cartInfo);
+        jedis.hset(userCartKey, userId, cartCheckedJson);
+
+        //2.新增到已选中购物车
+        String userCheckedKey = "user:" + userId + ":checked";
+        if (isChecked.equals("1")) {
+            jedis.hset(userCheckedKey, skuId, cartCheckedJson);
+        } else {
+            jedis.hdel(userCheckedKey, skuId);
+        }
+        jedis.close();
+
     }
 
 }

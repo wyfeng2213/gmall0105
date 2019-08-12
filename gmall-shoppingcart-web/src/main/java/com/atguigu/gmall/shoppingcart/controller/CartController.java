@@ -13,6 +13,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,6 +38,7 @@ public class CartController {
 
     @Reference
     CartService cartService;
+
     /**
      * 演示拦截器
      * 1.用户发送请求http://localhost:8084/toTrade
@@ -48,6 +51,7 @@ public class CartController {
      * 6.请求再次被拦截，此时用户已经有token，
      * 7.拦截器调用认证中心，辨别次token真假，如果返回假，http://localhost:8085/index?ReturnUrl="+requestURL
      * 重新登录验证，如果返回真，验证通过，覆盖oldtoken，去到toTrade（订单结算页面）
+     *
      * @param request
      * @param response
      * @param modelMap
@@ -55,21 +59,22 @@ public class CartController {
      */
     @RequestMapping("cartList")/*购物车订单页面*/
     @LoginRequired(loginSuccess = false)
-    public String cartList(HttpServletRequest request , HttpServletResponse response ,ModelMap modelMap){
+    public String cartList(HttpServletRequest request, HttpServletResponse response, ModelMap modelMap) {
+
         /*判断用户是否登录*/
         List<OmsCartItem> omsCartItems = new ArrayList<>();
         String memberId = "";
         memberId = (String) request.getAttribute("memberId");
         String nickname = (String) request.getAttribute("nickname");
-        if (StringUtils.isNotBlank(memberId)){
+        if (StringUtils.isNotBlank(memberId)) {
             /*已经登录，查询db ，调用cartList方法*/
             /*将用户没有登录时，加入到购物车的数据其实是临时存放在Cookie中，所以我们需要同步购物车*/
             String cartListCookie = CookieUtil.getCookieValue(request, "cartListCookie", true);
             System.out.println(cartListCookie);
             /*=======================================================================================================================================*/
-                  /*同步购物车以后一定要把在Cookie中同步的数据删除，不然每次到这里都会从Cookie同步数据*/
+            /*同步购物车以后一定要把在Cookie中同步的数据删除，不然每次到这里都会从Cookie同步数据*/
             /*=======================================================================================================================================*/
-            CookieUtil.deleteCookie(request , response , "cartListCookie");
+            CookieUtil.deleteCookie(request, response, "cartListCookie");
             if (StringUtils.isNotBlank(cartListCookie)) {
                 omsCartItems = JSON.parseArray(cartListCookie, OmsCartItem.class);
                 for (OmsCartItem omsCartItem : omsCartItems) {
@@ -83,21 +88,22 @@ public class CartController {
                 /*同步缓存*/
                 cartService.flushCartCatch(memberId);
             }
+            //获取缓存数据 , 处理逻辑和sku里面的处理一致 , 需要加分布式锁 处理缓存的问题
             omsCartItems = cartService.cartList(memberId);
 
-        }else{
+        } else {
             /*没有登录，查询cookie*/
             String cartListCookie = CookieUtil.getCookieValue(request, "cartListCookie", true);
-            if (StringUtils.isNotBlank(cartListCookie)){
-                omsCartItems = JSON.parseArray(cartListCookie , OmsCartItem.class);
+            if (StringUtils.isNotBlank(cartListCookie)) {
+                omsCartItems = JSON.parseArray(cartListCookie, OmsCartItem.class);
             }
         }
 
-        modelMap.put("cartList" , omsCartItems);
-        modelMap.put("nickname" , nickname);
+        modelMap.put("cartList", omsCartItems);
+        modelMap.put("nickname", nickname);
         /*购物车被勾选的商品总价totalAmount*/
         BigDecimal totalAmount = getTotalAmount(omsCartItems);
-        modelMap.put("totalAmount" , totalAmount);
+        modelMap.put("totalAmount", totalAmount);
         return "cart";
     }
 
@@ -108,14 +114,35 @@ public class CartController {
             String price = omsCartItem.getPrice();
             Long aLong = Long.valueOf(price);
             BigDecimal bigDecimal = BigDecimal.valueOf(aLong);
-            totalAmount=totalAmount.add(quantity.multiply(bigDecimal));
+            totalAmount = totalAmount.add(quantity.multiply(bigDecimal));
         }
         return totalAmount;
     }
 
+    @RequestMapping(value = "checkCart", method = RequestMethod.POST)
+    @ResponseBody
+    @LoginRequired(loginSuccess = true)
+    public void checkCart(HttpServletRequest request, ModelMap modelMap) {
+        String skuId = request.getParameter("skuId");
+        String isChecked = request.getParameter("isChecked");
+
+        String userId = (String) request.getAttribute("userId");
+        if (userId != null) {
+            cartService.checkCart(skuId, isChecked, userId);
+        }
+        //将最新的数据从缓存中取出来
+        List<OmsCartItem> omsCartItemList = cartService.cartList(userId);
+        modelMap.put("cartList", omsCartItemList);
+
+        //被勾选商品的总额
+        BigDecimal totalAmount = getTotalAmount(omsCartItemList);
+        modelMap.put("totalAmount", totalAmount);
+        return;
+    }
+
     @RequestMapping("addToCart")
     @LoginRequired(loginSuccess = false)
-    public String addToCart(String skuId , BigDecimal quantity , HttpServletRequest request , HttpServletResponse response){
+    public String addToCart(String skuId, BigDecimal quantity, HttpServletRequest request, HttpServletResponse response) {
 
         List<OmsCartItem> omsCartItems = new ArrayList<>();
 
@@ -136,45 +163,45 @@ public class CartController {
         /*判断用户是否登录*/
         /*在Authinterceptor中将token中携带的用户信息已经写入request域中了*/
         String memberId = (String) request.getAttribute("memberId");
-        if (StringUtils.isBlank(memberId)){
+        if (StringUtils.isBlank(memberId)) {
             /*用户没有登录*/
             /*cookie里原有的购物车数据*/
             String cartListCookie = CookieUtil.getCookieValue(request, "cartListCookie", true);
             /*判断cookie是否为空*/
-            if (StringUtils.isBlank(cartListCookie)){
+            if (StringUtils.isBlank(cartListCookie)) {
                 omsCartItems.add(omsCartItem);
-            }else {
+            } else {
                 //cookie不为空
                 omsCartItems = JSON.parseArray(cartListCookie, OmsCartItem.class);
                 /*判断我们即将添加购物车数据在cookie中是否存在*/
-                boolean exist = if_cart_exist(omsCartItems , omsCartItem);
-                if(exist){
+                boolean exist = if_cart_exist(omsCartItems, omsCartItem);
+                if (exist) {
                     //之前添加过，更新购物车的添加数量,所有商品价格
                     for (OmsCartItem cartItem : omsCartItems) {
-                        if (cartItem.getProductSkuId().equals(omsCartItem.getProductSkuId())){
+                        if (cartItem.getProductSkuId().equals(omsCartItem.getProductSkuId())) {
                             /*更新数量*/
                             cartItem.setQuantity(cartItem.getQuantity().add(omsCartItem.getQuantity()));
                             /*更新总计价格 , String-->int , Integer.valueOf(omsCartItem.getPrice())*/
                             //cartItem.setCartAllPrice(cartItem.getCartAllPrice()+omsCartItem.getPrice()*omsCartItem.getQuantity());
                         }
                     }
-                }else {
+                } else {
                     //之前没有添加过 ， 新增这条购物车
                     omsCartItems.add(omsCartItem);
                 }
             }
 
-            CookieUtil.setCookie(request , response , "cartListCookie" , JSON.toJSONString(omsCartItems) , 60*60*72 , true);
-        }else{
+            CookieUtil.setCookie(request, response, "cartListCookie", JSON.toJSONString(omsCartItems), 60 * 60 * 72, true);
+        } else {
             /*用户已经登录*/
             /*根据用户id,从数据库db中查询用户购物车信息，方便后面判断是该添加，还是更新购物车*/
-            OmsCartItem omsCartItemFromDb = cartService.ifCartsExistByUser(memberId , skuId);
-            if (omsCartItemFromDb == null){
+            OmsCartItem omsCartItemFromDb = cartService.ifCartsExistByUser(memberId, skuId);
+            if (omsCartItemFromDb == null) {
                 /*该用户没有添加过当前商品*/
                 omsCartItem.setMemberId(memberId);
                 omsCartItem.setQuantity(quantity);
                 cartService.addCart(omsCartItem);
-            }else{
+            } else {
                 /*该用户添加过当前商品*/
                 omsCartItemFromDb.setQuantity(omsCartItemFromDb.getQuantity().add(omsCartItem.getQuantity()));
                 cartService.updataCart(omsCartItemFromDb);
@@ -191,14 +218,15 @@ public class CartController {
         for (OmsCartItem cartItem : omsCartItems) {
             String productSkuId = cartItem.getProductSkuId();
             /*如果相等，说明即将添加到购物车的数据已经存在，不能覆盖，可以增加该商品的数量*/
-            if (productSkuId.equals(omsCartItem.getProductSkuId())){
+            if (productSkuId.equals(omsCartItem.getProductSkuId())) {
                 b = true;
             }
         }
         return b;
     }
+
     @RequestMapping("success")
-    public String success(){
+    public String success() {
         return "success";
     }
 }

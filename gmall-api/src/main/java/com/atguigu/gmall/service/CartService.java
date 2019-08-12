@@ -23,4 +23,6 @@ public interface CartService {
     void deletByOrderItemProductSkuId(String productSkuId);
 
     void delCartByMemberid(String memberId);
+
+    void checkCart(String skuId, String isChecked, String userId);
 }
