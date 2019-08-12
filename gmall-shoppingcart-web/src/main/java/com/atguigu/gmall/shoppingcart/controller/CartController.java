@@ -114,7 +114,10 @@ public class CartController {
             String price = omsCartItem.getPrice();
             Long aLong = Long.valueOf(price);
             BigDecimal bigDecimal = BigDecimal.valueOf(aLong);
-            totalAmount = totalAmount.add(quantity.multiply(bigDecimal));
+            // 选中的状态才计算价格
+            if (omsCartItem.getIsChecked().equals("1")) {
+                totalAmount = totalAmount.add(quantity.multiply(bigDecimal));
+            }
         }
         return totalAmount;
     }
