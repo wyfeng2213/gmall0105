@@ -149,9 +149,9 @@ public class CartController {
 
         List<OmsCartItem> omsCartItems = new ArrayList<>();
 
-        /*调用商品服务查询商品信息*/
+        /*1.调用商品服务查询商品信息*/
         PmsSkuInfo skuInfo = skuService.getSkuById(skuId, "");
-        /*将商品信息封装成购物车信息*/
+        /*2.将商品信息封装成购物车信息*/
         OmsCartItem omsCartItem = new OmsCartItem();
         omsCartItem.setCreateDate(new Date());
         omsCartItem.setDeleteStatus(0);
@@ -163,7 +163,7 @@ public class CartController {
         omsCartItem.setProductSkuId(skuId);
         omsCartItem.setQuantity(quantity);
         omsCartItem.setProductSn(skuInfo.getSkuDesc());
-        /*判断用户是否登录*/
+        /*3.判断用户是否登录*/
         /*在Authinterceptor中将token中携带的用户信息已经写入request域中了*/
         String memberId = (String) request.getAttribute("memberId");
         if (StringUtils.isBlank(memberId)) {
