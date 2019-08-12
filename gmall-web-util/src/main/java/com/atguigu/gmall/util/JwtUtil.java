@@ -10,6 +10,7 @@ import java.util.Map;
  * @date : 2019/7/18 | 9:04
  **/
 public class JwtUtil {
+    // 公共部分 : key 秘钥 ,param:私有部分 用户内容 salt一般是ip+时间戳后几位 通过MD5加密之后
     public static String encode(String key, Map<String, Object> param, String salt) {
         if (salt != null) {
             key += salt;

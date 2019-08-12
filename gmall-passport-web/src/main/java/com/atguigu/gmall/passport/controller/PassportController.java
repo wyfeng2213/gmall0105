@@ -29,6 +29,8 @@ public class PassportController {
     @Reference
     UserService userService;
 
+    // 点击登录的时候 会携带returnurl 比如首页的url returnurl:http://localhost:8083/index
+    //如果登录成功访问首页的url http://localhost:8083/index?token=
     @RequestMapping("login")/*本站登录*/
     @ResponseBody
     public String login(UmsMember umsMember, HttpServletRequest request) {

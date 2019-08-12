@@ -10,6 +10,8 @@ import io.searchbox.core.SearchResult;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -33,7 +35,7 @@ public class SearchServiceImpl implements SearchService {
     JestClient jestClient;
 
     @Override
-    public List<PmsSearchSkuInfo> list(PmsSearchParam pmsSearchParam){
+    public List<PmsSearchSkuInfo> list(PmsSearchParam pmsSearchParam) {
 
         String dslStr = getSearchDsl(pmsSearchParam);
         System.err.println(dslStr);
@@ -53,9 +55,9 @@ public class SearchServiceImpl implements SearchService {
             /*替换高亮关键字*/
             Map<String, List<String>> highlight = hit.highlight;
             /*当不用关键字搜索时，Map<String, List<String>> highlight = hit.highlight;
-            * 得到空的highlight，为了防止highlight.get("skuName").get(0);出现空指针异常
-            * */
-            if (highlight!=null){
+             * 得到空的highlight，为了防止highlight.get("skuName").get(0);出现空指针异常
+             * */
+            if (highlight != null) {
                 String skuName = highlight.get("skuName").get(0);
                 pmsSearchSkuInfo.setSkuName(skuName);
             }
@@ -76,19 +78,19 @@ public class SearchServiceImpl implements SearchService {
         /*bool*/
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         /*filter   , 在filter里面可以加term   , 相当于"pmsSkuAttrValue.valueId":"2" , 多个term可以new一个TermsQueryBuilder*/
-        if (!StringUtils.isEmpty(catalog3Id)){
-            TermQueryBuilder termQueryBuilder = new TermQueryBuilder("catalog3Id" , catalog3Id);
+        if (!StringUtils.isEmpty(catalog3Id)) {
+            TermQueryBuilder termQueryBuilder = new TermQueryBuilder("catalog3Id", catalog3Id);
             boolQueryBuilder.filter(termQueryBuilder);
         }
-        if (valueId!=null){
+        if (valueId != null) {
             for (String skuAttrValue : valueId) {
-                TermQueryBuilder termQueryBuilder = new TermQueryBuilder("pmsSkuAttrValue.valueId" , skuAttrValue);
+                TermQueryBuilder termQueryBuilder = new TermQueryBuilder("pmsSkuAttrValue.valueId", skuAttrValue);
                 boolQueryBuilder.filter(termQueryBuilder);
             }
         }
         /*must   ,  在must里面可以加match  , 相当于"skuName": "P30Pro"*/
-        if (!StringUtils.isEmpty(keyword)){
-            MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("skuName" , keyword);
+        if (!StringUtils.isEmpty(keyword)) {
+            MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("skuName", keyword);
             boolQueryBuilder.must(matchQueryBuilder);
         }
         /*query*/
@@ -97,6 +99,9 @@ public class SearchServiceImpl implements SearchService {
         searchSourceBuilder.from(0);
         /*size*/
         searchSourceBuilder.size(20);
+
+        TermsBuilder groupby_attr = AggregationBuilders.terms("groupby_attr").field("skuAttrValueList.valueId");
+        searchSourceBuilder.aggregation(groupby_attr);
         /*highlight ，关键字高亮显示*/
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         highlightBuilder.preTags("<span style='color:red;'>");
@@ -105,7 +110,7 @@ public class SearchServiceImpl implements SearchService {
         searchSourceBuilder.highlight(highlightBuilder);
         /*sort排序 , 按照id升序 ， 降序 ，这里存在String与long类型转换问题，待解决*/
         // id排序 id在es的数据结构定义成long类型, 一般是按照热度排序
-        searchSourceBuilder.sort("id" , SortOrder.DESC);
+        searchSourceBuilder.sort("id", SortOrder.DESC);
 
         /*最后转化成String返回给前台*/
         return searchSourceBuilder.toString();

@@ -18,6 +18,7 @@ public class TestJwt {
         map.put("nickname" , "小三");
         String ip = "127.0.0.1";
         String time = new SimpleDateFormat("yyyyMMdd HHmmss").format(new Date());
+        // key和盐值 都需要通过md5加密之后进行
         String encode = JwtUtil.encode("2019gmall0105", map, ip + time);
         System.err.println(encode);
     }
