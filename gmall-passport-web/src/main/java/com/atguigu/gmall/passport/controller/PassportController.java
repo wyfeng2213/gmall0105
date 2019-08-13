@@ -1,5 +1,7 @@
 package com.atguigu.gmall.passport.controller;
 
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.digest.MD5;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.bean.UmsMember;
@@ -31,6 +33,7 @@ public class PassportController {
 
     // 点击登录的时候 会携带returnurl 比如首页的url returnurl:http://localhost:8083/index
     //如果登录成功访问首页的url http://localhost:8083/index?token=
+    // 对于京东或者天猫 818或者双12 可以预先把活跃用户先放到redis中 ,减少服务器的压力
     @RequestMapping("login")/*本站登录*/
     @ResponseBody
     public String login(UmsMember umsMember, HttpServletRequest request) {
@@ -47,10 +50,21 @@ public class PassportController {
             userMap.put("memberId", memberId);
             userMap.put("nickname", nickname);
 
-            String ip = "127.0.0.1";
+            // 通过nginx转发的客户端ip  nginx需要设置 x-forwarded-for
+            String ip = request.getHeader("x-forwarded-for");
+            if (StringUtils.isBlank(ip)) {
+                //从request中获取
+                ip = request.getRemoteAddr();
+                if (StringUtils.isBlank(ip)) {
+                    // 要么给个默认的ip ,要么就直接return false 异常处理;
+                    ip = "127.0.0.1";
+                }
+            }
+
             /*在以后实际项目中需要按照预先设计的算法对其进行加密(JwtUtil.encode)，再生成token*/
+            // key和ip最好最好进行md5加密 SecureUtil.md5("2019")
             token = JwtUtil.encode("2019", userMap, ip);
-            /*将token存入redis*/
+            /*将token存入redis , cookie可能被篡改 , 需要redis也要设置*/
             userService.addUserToken(token, memberId);
         } else {
             /*登录失败 , 前端判断token*/
@@ -147,12 +161,12 @@ public class PassportController {
             userMap.put("memberId", memberId);
             userMap.put("nickname", nickname);
 
-             String ip = "127.0.0.1";
+            String ip = "127.0.0.1";
             /*在以后实际项目中需要按照预先设计的算法对其进行加密(JwtUtil.encode)，再生成token*/
             token = JwtUtil.encode("2019", userMap, ip);
             /*将token存入redis*/
             userService.addUserToken(token, memberId);
-            return "redirect:http://localhost:8083/index?token=" + token +"&currentIp="+ip;
+            return "redirect:http://localhost:8083/index?token=" + token + "&currentIp=" + ip;
         } else {
             /*登录失败 , 前端判断token*/
             return "fail";

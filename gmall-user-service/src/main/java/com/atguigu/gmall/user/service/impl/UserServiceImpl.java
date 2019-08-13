@@ -80,6 +80,7 @@ public class UserServiceImpl implements UserService {
         try {
             jedis = redisUtil.getJedis();
             if (jedis != null) {
+                // key  实际使用过程中需要用户名和密码已经MD5 , 防止泄露
                 String umsMemberStr = jedis.get("user:" + umsMember.getPassword() + umsMember.getUsername() + ":info");
                 if (StringUtils.isNotBlank(umsMemberStr)) {
                     /*用户名，密码正确*/

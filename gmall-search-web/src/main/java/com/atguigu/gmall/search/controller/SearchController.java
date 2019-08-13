@@ -191,7 +191,7 @@ public class SearchController {
 //    }
 
     @RequestMapping("index")
-    @LoginRequired(loginSuccess = false)/*拦截器*/
+    @LoginRequired(loginSuccess = false)/*拦截器 , 根据需求,可写可不写*/
     public String index(HttpServletRequest request, ModelMap modelMap) {
         String token = request.getParameter("token");
         modelMap.put("token", token);

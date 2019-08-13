@@ -1,5 +1,7 @@
 package com.atguigu.gmall.passport.controller;
 
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.digest.MD5;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.util.HttpclientUtil;
 
@@ -51,6 +53,8 @@ public class TestOauth2 {
 
     public static void main(String[] args) {
         getUser_info();
+        System.out.println(SecureUtil.md5("2019"));
+        System.out.println(MD5.create().digestHex16("2019"));
     }
 
 
