@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)//定义注解生效范围是“方法”
 @Retention(RetentionPolicy.RUNTIME)//定义注解在虚拟机运行时也生效
 public @interface LoginRequired {
-
+    // 是否需要登陆成功才放行
     boolean loginSuccess() default true;
 
 }

@@ -12,6 +12,7 @@ public class WebMvcConfiguration extends WebMvcConfigurerAdapter {
     AuthInterceptor authInterceptor;
     @Override public void addInterceptors(InterceptorRegistry registry){
         /*排除error错误请求*/
+        //把拦截器加入到spring容器中
         registry.addInterceptor(authInterceptor).addPathPatterns("/**").excludePathPatterns("/error");
         super.addInterceptors(registry);
     }
