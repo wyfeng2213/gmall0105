@@ -20,20 +20,28 @@ public class TestOauth2 {
         /*203c233ca28be441bdaf3fabfb82eedb*/
         /*http://passport.gmall.com:8085/vlogin*/
         /*1.通过client_id 以及 redirect_uri，返回给你一个code*/
+        //1>如果是在浏览器上访问地址 会跳转到授权页面 , 如果没有登录会提示登录
+        //引导用户与第三方地址授权交互地址
         String s1 = HttpclientUtil.doGet("https://api.weibo.com/oauth2/authorize?client_id=3702255538&response_type=code&redirect_uri=http://passport.gmall.com:8085/vlogin");
-        System.out.println(s1);
+        System.out.println("返回授权码code: " + s1);
         /*注意：在第一步和第二部之间有个用户授权登录过程（前提是之前该用户没有登录过）*/
-        /*2.获得Code*/
+        /*2.获得Code 把code传输到后台*/
+        //2> 如果是在浏览器上面授权之后 会在redirect_uri拼接 ?code=
+        //把授权码 传输到后台
         /*code: 855c7a61c4771f4a97183f363bdea0ac*/
         String s2 = "http://passport.gmall.com:8085/vlogin?code=a7e0af09cdbeceec24faeb5863f89912";
+        System.out.println(s2);
         return null;
     }
 
     /*3.通过code获取用户信息以及最重要的access_token*/
+//    client_secret 传输只有自己知道,需要结合code才能使用 , post 请求是为了access_token安全
     public static Map<String , String> getAccess_token(){
         /*3.通过code获取access_token  , 同时会将用户Id等信息查询出来一并返回给你*/
         /*https://api.weibo.com/oauth2/access_token?client_id=YOU&client_secret=YOU&grant_type=authorization_code&redirect_uri=YOU&code=CODE*/
-        String s3 = "https://api.weibo.com/oauth2/access_token?client_id=3702255538&client_secret=203c233ca28be441bdaf3fabfb82eedb&grant_type=authorization_code&redirect_uri=http://passport.gmall.com:8085/vlogin&code=d333b721a62b7c357f4881fb9d33dbaa";
+        String s3 = "https://api.weibo.com/oauth2/access_token?client_id=3702255538&" +
+                "client_secret=203c233ca28be441bdaf3fabfb82eedb&grant_type=authorization_code&" +
+                "redirect_uri=http://passport.gmall.com:8085/vlogin&code=d333b721a62b7c357f4881fb9d33dbaa";
         String access_token_json = HttpclientUtil.doPost(s3, null);
         Map<String , String> access_map = JSON.parseObject(access_token_json, Map.class);
         System.out.println(access_map.get("access_token"));
