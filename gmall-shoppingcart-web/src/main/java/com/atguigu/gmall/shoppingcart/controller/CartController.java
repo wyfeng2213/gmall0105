@@ -122,6 +122,10 @@ public class CartController {
         return totalAmount;
     }
 
+    // 1.勾选选择购物车 此方案是必须要有userId 登录之后才能勾选 , 然后从redis里面获取数据
+    // 2.可以勾选保存到cookie中  之后提交获取cookie的信息 进行校验 , 登录之后进行数据合并到缓存中
+    // 3.每次进入购物车 都是未选择的状态
+    // 4.购物车模块都需要登录之后才能使用
     @RequestMapping(value = "checkCart", method = RequestMethod.POST)
     @ResponseBody
     @LoginRequired(loginSuccess = true)

@@ -50,13 +50,14 @@ public class OrderController {
     @Reference
     SkuService skuService;
 
+    // 生成订单请求
     @RequestMapping("submitOrder")/*提交订单*/
     @LoginRequired(loginSuccess = true)
     public ModelAndView submitOrder(String receiveAddressId, BigDecimal totalAmount, String tradeCode, HttpServletRequest request, HttpServletResponse response, ModelMap modelMap) {
 
         String memberId = (String) request.getAttribute("memberId");
         String nickname = (String) request.getAttribute("nickname");
-        /*检查交易编码*/
+        /*1.检查交易编码*/
         String success = orderService.checkTradeCode(memberId, tradeCode);
         if (success != null && success.equals("success")) {
             List<OmsOrderItem> omsOrderItems = new ArrayList<>();
@@ -88,13 +89,15 @@ public class OrderController {
             omsOrder.setReceiveTime(time);
             omsOrder.setSourceType("0");/*0:PC 1:APP*/
             omsOrder.setStatus("0");
+            // 需要调用购物车的服务 获取总金额
             omsOrder.setTotalAmount(totalAmount.toString());
-            /*根据用户id获得要购买的商品列表（从购物车中取出商品列表）和总价格*/
+            /*2.根据用户id获得要购买的商品列表（从购物车中取出商品列表）和总价格*/
             List<OmsCartItem> omsCartItems = cartService.cartList(memberId);
             /*这里可以检验是否勾选，，，这里就不操作了*/
             for (OmsCartItem omsCartItem : omsCartItems) {
                 OmsOrderItem omsOrderItem = new OmsOrderItem();
                 omsOrderItem.setProductPrice(omsCartItem.getPrice());
+//                omsOrderItem.setRealAmount(omsCartItem.getTotalPrice()); // 设置实际价格
                 omsOrderItem.setProductName(omsCartItem.getProductName());
                 omsOrderItem.setProductCategoryId(omsCartItem.getProductCategoryId());
                 omsOrderItem.setProductQuantity(omsCartItem.getQuantity().toString());
@@ -103,22 +106,23 @@ public class OrderController {
                 omsOrderItem.setProductId(omsCartItem.getProductId());
                 omsOrderItem.setProductSkuId(omsCartItem.getProductSkuId());
                 omsOrderItem.setProductSn(omsCartItem.getProductSn());
-                /*检验价格*/
+                /*3.检验价格*/
                 boolean b = skuService.checkPrice(omsOrderItem.getProductSkuId(), omsOrderItem.getProductPrice());
+                // 不替用户做决定 , 一定要回滚 , 比如买一台组装电脑 ,结果没有显示器 给提交了订单 , 那组装电脑其余部件买了有用 ?
                 if (b == false) {
                     ModelAndView modelAndView = new ModelAndView("fail");
                     return modelAndView;
                 } else {
                     omsOrderItems.add(omsOrderItem);
                 }
-                /*检验库存 , 远程调用库存系统*/
+                /*4.检验库存 , 远程调用库存系统 仓库系统 如果库存不足,应该返回失败, 提示库存不足*/
             }
             omsOrder.setOmsOrderItems(omsOrderItems);
-            /*将订单和订单详情写入数据库  ==== 删除购物车对应的被勾选的商品*/
+            /*5.将订单和订单详情写入数据库  ==== 删除购物车对应的被勾选的商品*/
             orderService.SaveOrderAndDeletCartItem(omsOrder);
-            /*删除购物车数据，redis mysql*/
+            /*6.删除购物车数据，redis mysql*/
             cartService.delCartByMemberid(memberId);
-            /*重定向到支付系统*/
+            /*7.重定向到支付系统*/
             ModelAndView modelAndView = new ModelAndView("redirect:http://localhost:8087/index");
             modelAndView.addObject("outTradeNumber", outTradeNumber);
             modelAndView.addObject("totalAmount", totalAmount);

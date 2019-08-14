@@ -120,7 +120,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void checkCart(String skuId, String isChecked, String userId) {
-        // 1. 更新到数据库
+        // 1. 更新到数据库 , 可以一段时间之后 或者深夜同步到数据中去
         // 2.更新缓存  flushCartCatch(userId)
 
         //更新购物车中的isChecked标志  redis
