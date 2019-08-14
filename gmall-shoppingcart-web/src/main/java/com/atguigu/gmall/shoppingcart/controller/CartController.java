@@ -227,31 +227,6 @@ public class CartController {
         }
         return b;
     }
-
-    /**
-     * 进入去结算的流程
-     *
-     * @param request
-     * @param response
-     * @return
-     */
-    @RequestMapping("toTrade")
-    @LoginRequired(loginSuccess = true)
-    public String toTrade(HttpServletRequest request, HttpServletResponse response) {
-        String memberId = (String) request.getAttribute("memberId");
-        String nickname = (String) request.getAttribute("nickname");
-
-//        List<CartInfo> cartListFromCookie = cartCookieHandler.getCartList(request);
-//        if(cartListFromCookie!=null&&cartListFromCookie.size()>0){
-//            //1.合并到后台
-//            List<CartInfo> cartList = cartService.mergeToCartList(cartListFromCookie, userId);
-//            //2.cookie中的删除掉
-//            CookieUtil.deleteCookie(request, response, "cartListCookie");
-//        }
-        return "toTrade";
-//        return "redirect://order.gmall.com/trade";
-    }
-
     @RequestMapping("success")
     public String success() {
         return "success";
