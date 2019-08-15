@@ -145,6 +145,8 @@ public class PassportController {
         if (checkOauthUser == null) {/*之前没有登陆过*/
         /* 主键返回不支持远程RPC协议 ，保存用户信息 , mybatis的主键返回策略不能跨RPC协议使用，当我们远程调用
                         userService.addOauthUser(umsMember) 用该把新增的用户返回到这里*/
+            //UmsMember  需要设置用户的主键生成策略 @GeneratedValue(strategy = GenerationType.IDENTITY) 才能获取到id
+            //解决mybatis的主键返回策略不能跨RPC协议使用 可以返回一个对象包含id
             umsMember = userService.addOauthUser(umsMember);
         } else {
             // 之前就用第三方登录过 直接获取信息
