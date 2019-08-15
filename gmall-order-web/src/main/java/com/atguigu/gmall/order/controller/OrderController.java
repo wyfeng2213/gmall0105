@@ -53,7 +53,7 @@ public class OrderController {
     @RequestMapping("submitOrder")/*提交订单*/
     @LoginRequired(loginSuccess = true)
     public ModelAndView submitOrder(String receiveAddressId, BigDecimal totalAmount, String tradeCode, HttpServletRequest request, HttpServletResponse response, ModelMap modelMap) {
-
+        //总金额 可以不用提交 , 用户可以修改的, 总金额从购物车里面计算的
         String memberId = (String) request.getAttribute("memberId");
         String nickname = (String) request.getAttribute("nickname");
         /*检查交易编码*/
@@ -71,6 +71,7 @@ public class OrderController {
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("YYYYMMDDHHmmss");
             outTradeNumber = outTradeNumber + simpleDateFormat.format(new Date());/*将时间字符串拼接到外部订单号*/
             omsOrder.setOrderSn(outTradeNumber);
+            // 订单总金额
             omsOrder.setPayAmount(totalAmount.toString());
             omsOrder.setOrderType("1");
             UmsMemberReceiveAddress umsMemberReceiveAddress = userService.getReceiveAddressByReceiveAddressId(receiveAddressId);
@@ -94,6 +95,7 @@ public class OrderController {
             /*这里可以检验是否勾选，，，这里就不操作了*/
             for (OmsCartItem omsCartItem : omsCartItems) {
                 OmsOrderItem omsOrderItem = new OmsOrderItem();
+                // 价格
                 omsOrderItem.setProductPrice(omsCartItem.getPrice());
                 omsOrderItem.setProductName(omsCartItem.getProductName());
                 omsOrderItem.setProductCategoryId(omsCartItem.getProductCategoryId());
@@ -105,14 +107,17 @@ public class OrderController {
                 omsOrderItem.setProductSn(omsCartItem.getProductSn());
                 /*检验价格*/
                 boolean b = skuService.checkPrice(omsOrderItem.getProductSkuId(), omsOrderItem.getProductPrice());
+
                 if (b == false) {
                     ModelAndView modelAndView = new ModelAndView("fail");
                     return modelAndView;
                 } else {
+                    // === 需要计算购物车的总价格 totalAmount
                     omsOrderItems.add(omsOrderItem);
                 }
                 /*检验库存 , 远程调用库存系统*/
             }
+            // === 需要设置购物车计算的 总金额   omsOrder.setPayAmount(totalAmount.toString());
             omsOrder.setOmsOrderItems(omsOrderItems);
             /*将订单和订单详情写入数据库  ==== 删除购物车对应的被勾选的商品*/
             orderService.SaveOrderAndDeletCartItem(omsOrder);
@@ -129,6 +134,9 @@ public class OrderController {
         }
     }
 
+    //需要5个服务 , 不登录searchWeb可以不用 , 是购物车列表过来的需要服务
+    // 1.购物车服务 , 2.passport服务 3.订单服务 4.用户服务
+    // 进入结算界面 , 直接从缓存或者数据库中查询用户所要购买的商品，转化成订单 , 确认信息
     @RequestMapping("toTrade")/*去结算页面*/
     @LoginRequired(loginSuccess = true)
     public String toTrade(HttpServletRequest request, HttpServletResponse response, ModelMap modelMap) {
@@ -160,6 +168,7 @@ public class OrderController {
             omsOrderItem.setProductPrice(omsCartItem.getPrice());
             omsOrderItem.setOrderSn(omsCartItem.getProductSn());
             omsOrderItem.setProductQuantity(omsCartItem.getQuantity().toString());
+            //计算价格
             ALL_PRICE = ALL_PRICE + (Integer.parseInt(omsCartItem.getPrice()) * Integer.parseInt(omsCartItem.getQuantity().toString()));
             omsOrderItem.setProductName(omsCartItem.getProductName());/*还可以继续封装其他参数。。。。*/
             omsOrderItems.add(omsOrderItem);
