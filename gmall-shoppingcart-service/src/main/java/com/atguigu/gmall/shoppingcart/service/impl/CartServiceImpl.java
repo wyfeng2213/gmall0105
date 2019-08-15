@@ -52,6 +52,7 @@ public class CartServiceImpl implements CartService {
         omsCartItemMapper.updateByExampleSelective(omsCartItemFromDb, e);
     }
 
+    // 刷新缓存 , 从数据库中重新查询数据 加载到缓存中
     @Override
     public void flushCartCatch(String memberId) {
         OmsCartItem omsCartItem = new OmsCartItem();
@@ -101,6 +102,8 @@ public class CartServiceImpl implements CartService {
         omsCartItemMapper.deleteByPrimaryKey(omsCartItem);
     }
 
+    // 每次查询获取购物车列表或者添加购物车的时候 都会重新加载缓存, 不需要担心删除的时候数据库数据 jedis数据没有删除成功的问题
+    //只需要再次进入购物车列表就可以重新加载缓存
     @Override
     public void delCartByMemberid(String memberId) {
         OmsCartItem omsCartItem = new OmsCartItem();
@@ -125,7 +128,7 @@ public class CartServiceImpl implements CartService {
 
         //更新购物车中的isChecked标志  redis
         Jedis jedis = redisUtil.getJedis();
-        String userCartKey ="user:" + userId + ":cart";
+        String userCartKey = "user:" + userId + ":cart";
         String cartJson = jedis.hget(userCartKey, skuId);
 
         OmsCartItem cartInfo = JSON.parseObject(cartJson, OmsCartItem.class);

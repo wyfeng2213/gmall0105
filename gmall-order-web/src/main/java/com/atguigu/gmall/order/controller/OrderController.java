@@ -109,11 +109,12 @@ public class OrderController {
                 omsOrderItem.setProductSkuId(omsCartItem.getProductSkuId());
                 omsOrderItem.setProductSn(omsCartItem.getProductSn());
                 /*3.检验价格*/
-                boolean b = skuService.checkPrice(omsOrderItem.getProductSkuId(), omsOrderItem.getProductPrice());
                 // 不替用户做决定 , 一定要回滚 , 比如买一台组装电脑 ,结果没有显示器 给提交了订单 , 那组装电脑其余部件买了有用 ?
+                boolean b = skuService.checkPrice(omsCartItem.getProductSkuId(), omsCartItem.getPrice());
                 if (b == false) {
-                    ModelAndView modelAndView = new ModelAndView("fail");
-                    return modelAndView;
+                    //request.setAttribute("errMsg","您选择的商品可能存在价格变动，请重新下单");
+                    ModelAndView mv = new ModelAndView("tradeFail");
+                    return mv;
                 } else {
                     omsOrderItems.add(omsOrderItem);
                 }
@@ -123,7 +124,7 @@ public class OrderController {
             omsOrder.setOmsOrderItems(omsOrderItems);
             /*5.将订单和订单详情写入数据库  ==== 删除购物车对应的被勾选的商品*/
             orderService.SaveOrderAndDeletCartItem(omsOrder);
-            /*6.删除购物车数据，redis mysql*/
+            /*6.订单成功之后需要删除购物车数据，redis mysql*/
             cartService.delCartByMemberid(memberId);
             /*7.重定向到支付系统*/
             ModelAndView modelAndView = new ModelAndView("redirect:http://localhost:8087/index");
