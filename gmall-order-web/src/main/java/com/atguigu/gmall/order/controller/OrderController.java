@@ -128,8 +128,9 @@ public class OrderController {
             cartService.delCartByMemberid(memberId);
             /*7.重定向到支付系统*/
             ModelAndView modelAndView = new ModelAndView("redirect:http://localhost:8087/index");
+            // 真实项目中通过用户id能够查询到 , 通过参数传递不安全
             modelAndView.addObject("outTradeNumber", outTradeNumber);
-            modelAndView.addObject("totalAmount", totalAmount);
+           modelAndView.addObject("totalAmount", totalAmount);
             return modelAndView;
         } else {
             ModelAndView modelAndView = new ModelAndView("fail");
