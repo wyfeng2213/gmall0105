@@ -89,6 +89,7 @@ public class paymentController {
             /*调用ActiveMQ发送支付成功的消息*/
             /*进行支付更新的幂等性检查操作在updatePayment方法里面，防止与PaymentServiceMqListener一起重复更新*/
             /*=====================================================================================================================================*/
+            //更新操作有发送给订单消息的服务
             paymentService.updatePayment(paymentInfo);
         }
         return "finish";

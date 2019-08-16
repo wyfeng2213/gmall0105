@@ -62,22 +62,29 @@ public class PaymentServiceImpl implements PaymentService {
             Session session = null;
             try {
                 connection = activeMQUtil.getConnectionFactory().createConnection();
+                //开启事务
                 session = connection.createSession(true, Session.SESSION_TRANSACTED);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
             try {
+                // 更新支付信息
                 paymentInfoMapper.updateByExampleSelective(paymentInfo, example);
-                /*=====================================================================================================================================*/
+
                 /*支付成功后 引起的系统服务 ，——> （当前）订单服务更新 ，——> 库存服务 ，——> 物流服务*/
                 /*这里我们将引入分布式事务消息中间件ActiveMQ*//*调用ActiveMQ发送支付成功的消息*/
-                /*=====================================================================================================================================*/
-                Queue payment_success_queue = session.createQueue("PAYMENT_SUCCESS_QUEUE");/*创建队列模式消息*/
+                /*=====================================================================================*/
+                /*创建队列模式消息  消息发送的代码需要整合 , 参考jmsTemplate的消息发送和消息监听*/
+                Queue payment_success_queue = session.createQueue("PAYMENT_SUCCESS_QUEUE");
+//               Topic topic = session.createTopic(""); //topic模式消息
                 MessageProducer producer = session.createProducer(payment_success_queue);
                 //ActiveMQTextMessage textMessage = new ActiveMQTextMessage();/*字符串形式结构的消息*/
-                ActiveMQMapMessage mapMessage = new ActiveMQMapMessage();/*hash形式结构的消息（K   V）结构*/
+                /*hash形式结构的消息（K   V）结构*/
+                ActiveMQMapMessage mapMessage = new ActiveMQMapMessage();
+                //发送外部订单号
                 mapMessage.setString("out_trade_no", paymentInfo.getOrderSn());
-                producer.send(mapMessage);/*发送消息*/
+                /*发送消息*/
+                producer.send(mapMessage);
                 session.commit();
             } catch (Exception e) {
                 /*更新失败，回滚*/

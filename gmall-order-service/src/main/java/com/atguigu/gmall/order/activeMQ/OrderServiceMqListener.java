@@ -22,12 +22,15 @@ public class OrderServiceMqListener {
 
     @JmsListener(destination = "PAYMENT_SUCCESS_QUEUE" , containerFactory = "jmsQueueListener")
     public void consumPaymentResult(MapMessage mapMessage) throws JMSException {
+        //====接受到支付成功,更新状态之后的通知 进行订单服务的更新 , 更新外部订单号
+
         String out_trade_no = mapMessage.getString("out_trade_no");
         /*在PaymentServiceImpl中支付成功后成功更新了paymentInfo的支付状态，发送消息给订单，让其更新支付状态（status）*/
         /*更新订单状态业务*/
         System.out.println(out_trade_no);
         OmsOrder omsOrder = new OmsOrder();
         omsOrder.setOrderSn(out_trade_no);
+        //  更新操作有发送给库存消息的服务 , 更新操作有设置订单状态为成功
         orderService.updataOrder(omsOrder);/*调用更新业务*/
         System.out.println("ok");
     }

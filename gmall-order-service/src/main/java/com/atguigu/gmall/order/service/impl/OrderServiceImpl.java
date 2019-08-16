@@ -113,7 +113,8 @@ public class OrderServiceImpl implements OrderService {
         Example example = new Example(OmsOrder.class);
         example.createCriteria().andEqualTo("orderSn" , omsOrder.getOrderSn());
         OmsOrder omsOrder1 = new OmsOrder();
-        omsOrder1.setStatus("1");/*1，代表已支付*/
+        /*1，代表已支付  设置更新状态*/
+        omsOrder1.setStatus("1");
         Connection connection = null;
         Session session = null;
         try {
