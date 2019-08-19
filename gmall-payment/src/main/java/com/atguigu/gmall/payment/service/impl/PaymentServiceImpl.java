@@ -52,6 +52,7 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentInfo paymentInfo1 = new PaymentInfo();
         paymentInfo1.setOrderSn(paymentInfo.getOrderSn());
         PaymentInfo paymentInfoResult = paymentInfoMapper.selectOne(paymentInfo1);
+        //幂等性处理
         if (paymentInfoResult != null && paymentInfoResult.getPaymentStatus().equals("已付款")) {
             /*说明在paymentController 与 PaymentServiceMqListener里面其中一个已经执行了更新操作*/
             return;
@@ -103,6 +104,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    //延迟消息队列发送
     @Override
     public void sendDelayPaymentResultCheckQueue(String outTradeNumber, int count) {
         Connection connection = null;

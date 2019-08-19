@@ -150,6 +150,7 @@ public class paymentController {
         /*向消息中间件发送一个检查支付状态的延迟消息队列 ，在activeMQ的config文件<broker>标签配置schedulerSupport="true"*/
         /*=================================================================================================================*/
         /*定义监听循环次数6次   向消息中间件发送一个检查支付状态(支付服务消费)的延迟消息队列*/
+        // 延迟队列消息发送 检查支付状态 和平台的alipay/callback/return请求处理是一致的, 这个是主动去请求状态
         paymentService.sendDelayPaymentResultCheckQueue(outTradeNumber, 6);
         /*提交请求到支付宝*/
         return form;
