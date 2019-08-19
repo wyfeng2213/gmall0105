@@ -350,6 +350,7 @@ public class GwareServiceImpl implements GwareService {
         }
 
         try {
+            //锁定成功之后  发送出库的消息队列
             sendSkuDeductMQ(wareOrderTask);
         } catch (JMSException e) {
             e.printStackTrace();

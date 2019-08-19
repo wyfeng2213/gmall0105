@@ -86,7 +86,15 @@ public class SkuServiceImpl implements SkuService {
         }
         //插入图片，暂时还没有实现，不是技术问题，是资料欠缺！
         System.out.println("以后");
-    }
+//        List<PmsSkuImage> skuImageList = pmsSkuInfo.getSkuImageList();
+//        for (PmsSkuImage pmsSkuImage : skuImageList) {
+//            pmsSkuImage.setSkuId(skuId);
+//            pmsSkuImageMapper.insertSelective(pmsSkuImage);
+//        }
+
+        // 发出商品的缓存同步MQ消息
+        // 发出商品的搜索引擎的同步MQ消息
+}
 
 
     /**
