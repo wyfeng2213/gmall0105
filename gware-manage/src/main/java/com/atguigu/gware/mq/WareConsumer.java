@@ -86,7 +86,7 @@ public class WareConsumer {
         // 检查该交易的商品是否有拆单需求
         List<WareOrderTask> wareSubOrderTaskList = gwareService.checkOrderSplit(wareOrderTask);// 检查拆单
 
-        // 库存削减
+        // 库存削减 拆单的数量大于2
         if (wareSubOrderTaskList != null && wareSubOrderTaskList.size() >= 2) {
             for (WareOrderTask orderTask : wareSubOrderTaskList) {
                 gwareService.lockStock(orderTask);

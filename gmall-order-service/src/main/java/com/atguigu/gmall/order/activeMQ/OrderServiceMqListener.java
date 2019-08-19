@@ -31,6 +31,7 @@ public class OrderServiceMqListener {
         OmsOrder omsOrder = new OmsOrder();
         omsOrder.setOrderSn(out_trade_no);
         //  更新操作有发送给库存消息的服务 , 更新操作有设置订单状态为成功
+        // 调用库存系统 发送消息
         orderService.updataOrder(omsOrder);/*调用更新业务*/
         System.out.println("ok");
     }

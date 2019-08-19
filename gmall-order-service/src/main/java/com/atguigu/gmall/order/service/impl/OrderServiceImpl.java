@@ -2,6 +2,7 @@ package com.atguigu.gmall.order.service.impl;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.bean.OmsOrder;
 import com.atguigu.gmall.bean.OmsOrderItem;
 import com.atguigu.gmall.mq.ActiveMQUtil;
@@ -11,6 +12,7 @@ import com.atguigu.gmall.service.CartService;
 import com.atguigu.gmall.service.OrderService;
 import com.atguigu.gmall.util.RedisUtil;
 import org.apache.activemq.command.ActiveMQMapMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import redis.clients.jedis.Jedis;
 import tk.mybatis.mapper.entity.Example;
@@ -108,48 +110,57 @@ public class OrderServiceImpl implements OrderService {
         return omsOrder1;
     }
 
+
+    // 支付成功之后的 订单消息监听 调用接口 OrderServiceMqListener
     @Override
-    public void updataOrder(OmsOrder omsOrder) {
-        Example example = new Example(OmsOrder.class);
-        example.createCriteria().andEqualTo("orderSn" , omsOrder.getOrderSn());
-        OmsOrder omsOrder1 = new OmsOrder();
-        /*1，代表已支付  设置更新状态*/
-        omsOrder1.setStatus("1");
+    public void updateOrder(OmsOrder omsOrder) {
+        Example e = new Example(OmsOrder.class);
+        e.createCriteria().andEqualTo("orderSn",omsOrder.getOrderSn());
+
+        OmsOrder omsOrderUpdate = new OmsOrder();
+
+        omsOrderUpdate.setStatus("1");
+
+        // 发送一个订单已支付的队列，提供给库存消费 发送库存的mq消息
         Connection connection = null;
         Session session = null;
-        try {
+        try{
             connection = activeMQUtil.getConnectionFactory().createConnection();
-            session = connection.createSession(true, Session.SESSION_TRANSACTED);
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
-        try {
-            omsOrderMapper.updateByExampleSelective(omsOrder1 , example);
-            /*订单跟新完毕后 ,给库存发送一个订单已支付的队列*/
-            /*支付成功后 引起的系统服务 ，——> 订单服务更新 ，——> （当前）库存服务 ，——> 物流服务*/
-            /*=================================这里我们将引入分布式事务消息中间件ActiveMQ================================*/
-            /*调用ActiveMQ发送支付成功的消息*/
-            Queue order_payed_queue = session.createQueue("ORDER_PAYED_QUEUE");/*创建队列模式消息*/
-            MessageProducer producer = session.createProducer(order_payed_queue);
-            //ActiveMQTextMessage textMessage = new ActiveMQTextMessage();/*字符串形式结构的消息*/
-            ActiveMQMapMessage mapMessage = new ActiveMQMapMessage();/*hash形式结构的消息（K   V）结构*/
+            session = connection.createSession(true,Session.SESSION_TRANSACTED);
+            Queue payhment_success_queue = session.createQueue("ORDER_PAY_QUEUE");
+            MessageProducer producer = session.createProducer(payhment_success_queue);
+            TextMessage textMessage=new ActiveMQTextMessage();//字符串文本
+            //MapMessage mapMessage = new ActiveMQMapMessage();// hash结构
 
-            producer.send(mapMessage);/*发送消息*/
+            // 查询订单的对象，转化成json字符串，存入ORDER_PAY_QUEUE的消息队列
+            OmsOrder omsOrderParam = new OmsOrder();
+            omsOrderParam.setOrderSn(omsOrder.getOrderSn());
+            OmsOrder omsOrderResponse = omsOrderMapper.selectOne(omsOrderParam);
+
+            OmsOrderItem omsOrderItemParam = new OmsOrderItem();
+            omsOrderItemParam.setOrderSn(omsOrderParam.getOrderSn());
+            List<OmsOrderItem> select = omsOrderItemMapper.select(omsOrderItemParam);
+            omsOrderResponse.setOmsOrderItems(select);
+            textMessage.setText(JSON.toJSONString(omsOrderResponse));
+
+            omsOrderMapper.updateByExampleSelective(omsOrderUpdate,e);
+            producer.send(textMessage);
             session.commit();
-        } catch (Exception e) {
-            /*更新失败，回滚*/
+        }catch (Exception ex){
+            // 消息回滚
             try {
                 session.rollback();
             } catch (JMSException e1) {
                 e1.printStackTrace();
             }
-        } finally {
+        }finally {
             try {
-                connection.close();/*关闭连接*/
-            } catch (JMSException e) {
-                e.printStackTrace();
+                connection.close();
+            } catch (JMSException e1) {
+                e1.printStackTrace();
             }
         }
+
     }
 
 
