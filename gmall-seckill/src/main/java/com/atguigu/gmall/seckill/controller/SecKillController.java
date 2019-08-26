@@ -29,12 +29,13 @@ public class SecKillController {
     RedisUtil redisUtil;
 
 
-    /*先到先得式秒杀*/
+    /* Redisson 先到先得式秒杀*/
     @RequestMapping("killFirst")
     @ResponseBody
     public String killFirst() {
         String memberId = "某某";
-        RSemaphore semaphore = redissonClient.getSemaphore("6");
+        // watchKey() 还是redis的key
+        RSemaphore semaphore = redissonClient.getSemaphore(watchKey());
         /*tryAcquire()  ，尝试去执行，可能成功，可能失败*/
         boolean b = semaphore.tryAcquire();
         if (b) {
@@ -49,7 +50,7 @@ public class SecKillController {
     }
 
 
-    /*拼运气秒杀*/
+    /*Redis 拼运气秒杀*/
     @RequestMapping("killSecond")
     @ResponseBody
     public String killSecond() {
@@ -58,11 +59,11 @@ public class SecKillController {
         try {
             jedis = redisUtil.getJedis();
             /*开启商品的监控*/
-            jedis.watch("6");
-            Integer key = Integer.parseInt(jedis.get("6"));
+            jedis.watch(watchKey());
+            Integer key = Integer.parseInt(jedis.get(watchKey()));
             if (key > 0) {
                 Transaction multi = jedis.multi();/*开启事务*/
-                multi.incrBy("6", -1);
+                multi.incrBy(watchKey(), -1);
                 List<Object> exec = multi.exec();
                 if (exec != null && exec.size() > 0) {
                     System.out.println("当前库存剩余数量：" + key + "当前用户：" + memberId + "抢购成功！！");
@@ -79,5 +80,9 @@ public class SecKillController {
             jedis.close();
         }
         return "1";
+    }
+
+    private String watchKey() {
+        return "6";
     }
 }
